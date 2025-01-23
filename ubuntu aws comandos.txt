@@ -1,0 +1,27 @@
+sudo apt update 
+
+sudo apt install python3
+
+sudo apt install python3-pip
+
+sudo apt install python3.12-venv
+
+
+
+sudo python3 -m venv venv (entorno)
+
+source venv/bin/activate (entrar en el entorno)
+
+ls venv/bin (ver todo lo que esta instalado)
+
+ls -la (ver archivos en la carpeta) 
+
+sudo venv/bin/python3 -m pip install <package_name> (instalar cualquier paquete)
+
+sudo venv/bin/python3 -m pip install -r requirements.txt  (estar dentro del venv)
+
+flask run --debug --host=0.0.0.0 --port=5000 (activar flask para las consultas) 
+
+deactivate (salir del entorno venv)
+
+daemon-reload
