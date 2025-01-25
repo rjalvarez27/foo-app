@@ -1,27 +1,232 @@
+clase 16 de enero
+
+cong 1 (flask sencilla)
+=================================================================================
+cd /opt
 sudo apt update 
-
 sudo apt install python3
-
 sudo apt install python3-pip
-
-sudo apt install python3.12-venv
-
-
-
-sudo python3 -m venv venv (entorno)
-
+sudo apt install python3.12-venv (crear entorno venv)
+sudo git clone repositorio 
+sudo python3 -m venv venv (actvar entorno)
 source venv/bin/activate (entrar en el entorno)
-
 ls venv/bin (ver todo lo que esta instalado)
-
 ls -la (ver archivos en la carpeta) 
-
 sudo venv/bin/python3 -m pip install <package_name> (instalar cualquier paquete)
-
 sudo venv/bin/python3 -m pip install -r requirements.txt  (estar dentro del venv)
-
+cat app.py 
 flask run --debug --host=0.0.0.0 --port=5000 (activar flask para las consultas) 
-
 deactivate (salir del entorno venv)
 
-daemon-reload
+
+config 2 (wsgi)
+=================================================================================
+
+sudo apt update 
+cd / opt
+cd foo
+sudo git clone repositorio git hub 
+sudo apt install python3 
+sudo apt install python3-pip 
+sudo apt install python3.12-venv 
+ls 
+sudo python3 -m venv venv 
+source venv/bin/activate
+sudo venv/bin/python3 -m pip install -r requirements.txt 
+sudo venv/bin/python3 -m pip install gunicorn 
+sudo nano wsgi.py activar wsgi 
+ 
+
+ARCHIVO: WSGI - (wsgi.py) 
+ 
+from app import app 
+ 
+if __name__ == "__main__":
+   app.run() 
+ 
+================= 
+ 
+gunicorn --bind 0.0.0.0:5000 wsgi:app 
+
+> AHORA UNA SEGUNDA OPCIÓN:=======================================================
+
+ls cpu (lista de cpu, por cada cpu dos worker)
+
+sudo nano gunicorn_config.py
+
+ARCHIVO: gunicorn_config.py:
+
+=====================
+
+bind = "0.0.0.0:5000"
+
+workers = 3
+=================
+
+gunicorn --config gunicorn_config.py wsgi:app
+
+ 
+
+config 3 (gunicorn (como servicio) y flask (demonio para que el servicio siga funcionando sin estar en la consola)
+===================================================================================
+sudo apt update 
+cd / opt
+cd foo
+sudo git clone repositorio git hub 
+sudo apt install python3 
+sudo apt install python3-pip 
+sudo apt install python3.12-venv 
+ls 
+sudo python3 -m venv venv 
+source venv/bin/activate
+sudo venv/bin/python3 -m pip install -r requirements.txt 
+sudo venv/bin/python3 -m pip install gunicorn 
+
+sudo nano wsgi.py activar wsgi 
+
+==================
+ARCHIVO: WSGI - (wsgi.py) 
+ 
+from app import app 
+ 
+if __name__ == "__main__":
+   app.run() 
+ 
+================= 
+
+sudo cat wsgi.py
+
+sudo nano /etc/systemd/system/flask-app.service (crear el demonio o flask.service)
+
+==================================
+[Unit]
+Description=Gunicorn instance to serve Flask application
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/foo-app
+ExecStart=/opt/foo-app/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+===============
+
+sudo cat /etc/systemd/system/flask-app.service
+sudo ls /etc/systemd/system/ | grep flask verificar que esta instalado el servicio ( ver archivo con el nombre)
+sudo systemctl daemon-reload
+sudo systemctl start flask-app.service 
+sudo systemctl enable flask-app.service  (todo verde esta todo bien) 
+sudo systemctl status flask-app.service
+sudo systemctl stop flask-app.service
+sudo systemctl disable flask-app  (desactivar)
+sudo rm /etc/systemd/system/flask-app.service (borrar servicio y se vuelven a cargar los servicios sudo systemctl daemon-reload)
+sudo systemctl daemon-reload
+para verificar que todo este bien:
+sudo systemctl list-units --type=service | grep flask (verificar)
+
+
+
+config 4 (nginx)
+=================================================================================
+sudo apt update
+sudo apt install python3
+sudo apt install python3-pipsudo apt install python3.12-venv
+sudo git clone repositorio
+sudo python3 -m venv venv
+source venv/bin/activate
+sudo venv/bin/python3 -m pip install -r requirements.txt
+sudo venv/bin/python3 -m pip install gunicorn
+
+
+sudo nano wsgi.py activar wsgi 
+=================
+ARCHIVO: WSGI - (wsgi.py)
+
+from app import app 
+ 
+if __name__ == "__main__":
+   app.run() 
+ 
+
+=================
+
+sudo cat wsgi.py
+
+sudo nano /etc/systemd/system/flask-app.service
+
+==================================
+[Unit]
+Description=Gunicorn instance to serve Flask application
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/foo-app
+ExecStart=/opt/foo-app/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+===============
+
+sudo cat /etc/systemd/system/flask-app.service
+sudo ls /etc/systemd/system/ | grep flask (verificar que esta instalado el servicio  ver archivo con el nombre)
+sudo systemctl daemon-reload
+sudo systemctl start flask-app.service 
+sudo systemctl enable flask-app.service
+sudo systemctl status flask-app.service
+
+===================================
+NGIX ==============================
+-----------------------------------
+sudo apt install nginx
+
+sudo ls /etc/nginx/sites-available/ (default nose toca para nada)
+
+sudo nano /etc/nginx/sites-available/myflask
+
+ server_name direccion_publica_del_ec2; (sustituir por la ip publica de de ec2)
+
+================================
+server {
+    listen 80;
+    server_name 18.118.1.113;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme; 
+        }
+ }
+================================
+
+sudo cat /etc/nginx/sites-available/myflask
+
+sudo ln -s /etc/nginx/sites-available/myflask /etc/nginx/sites-enabled/
+
+sudo ls /etc/nginx/sites-enabled/
+
+sudo nginx -t (prueba para que todo este correctamente)
+
+sudo systemctl reload nginx
+
+sudo systemctl status nginx
+
+sudo systemctl restart nginx
+
+sudo systemctl stop nginx
+
+hay que desactivar el puerto 5000 y eso se configura en firewall del ec2 se borra de las
+configuraciones para que no tenga dos metodos de entrada. sola la de ngix 
+
+NOOO: http://18.118.1.113/:5000 (desactivada)
+
+Siii: http://18.118.1.113/ (entra sin problema por en nginx.)
+
+
